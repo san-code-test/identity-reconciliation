@@ -3,7 +3,7 @@ services:
     container_name: 'postgres-contact-db'
     image: 'postgres:latest'
     environment:
-      - 'POSTGRES_DB=${POSTGRES_URL}'
+      - 'POSTGRES_DB=${POSTGRES_DB}'
       - 'POSTGRES_USER=${POSTGRES_USER}'
       - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'
     ports:
