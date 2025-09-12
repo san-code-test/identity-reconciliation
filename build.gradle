@@ -7,7 +7,7 @@ plugins {
 
 group = 'com.santhosh.identity'
 version = '0.0.1-SNAPSHOT'
-description = 'Demo project for Spring Boot'
+description = 'A Spring Boot project for Identity Reconciliation'
 
 java {
 	toolchain {
