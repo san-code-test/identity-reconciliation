@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=identity_reconciliation'
+      - 'POSTGRES_PASSWORD=exmpl'
+      - 'POSTGRES_USER=developer'
+    ports:
+      - '5432:5432'
