@@ -16,126 +16,126 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Controller
 public class MainController {
-  @Autowired
-  private ContactRepository contactRepository;
+	@Autowired
+	private ContactRepository contactRepository;
 
-  @PostMapping(path="/identity") 
-  public @ResponseBody String doIdentityReconciliation (@RequestParam String phoneNumber
-      , @RequestParam String email) {
-    List<Contact> phoneRecords = contactRepository.findAllByPhoneNumber(phoneNumber);
-    List<Contact> emailRecords = contactRepository.findAllByEmail(email);
+	@PostMapping(path = "/identity")
+	public @ResponseBody String doIdentityReconciliation(@RequestParam String phoneNumber, @RequestParam String email) {
+		List<Contact> phoneRecords = contactRepository.findAllByPhoneNumber(phoneNumber);
+		List<Contact> emailRecords = contactRepository.findAllByEmail(email);
 
-    int primaryContactId=-1; 
-    
-    if(phoneRecords.isEmpty() && emailRecords.isEmpty()) {
+		int primaryContactId = -1;
 
-      Contact contact = new Contact(phoneNumber, email);
-      contact.setLinkPrecedence(LinkPrecedence.PRIMARY);
-      contactRepository.save(contact);
-      primaryContactId = contact.getId();
+		if (phoneRecords.isEmpty() && emailRecords.isEmpty()) {
 
-    } else if(emailRecords.isEmpty()) {
-      for(Contact phoneRecord: phoneRecords) {
-        if(phoneRecord.getLinkPrecedence()==LinkPrecedence.PRIMARY) {
-          primaryContactId = phoneRecord.getId();
-        }
-        
-        if(phoneRecord.getLinkedId()!=null) {
-          primaryContactId = phoneRecord.getLinkedId();
-        }
-      }
+			Contact contact = new Contact(phoneNumber, email);
+			contact.setLinkPrecedence(LinkPrecedence.PRIMARY);
+			contact = contactRepository.save(contact);
+			primaryContactId = contact.getId();
 
-      Contact contact = new Contact(phoneNumber, email);
-      contact.setLinkPrecedence(LinkPrecedence.SECONDARY);
-      contact.setLinkedId(primaryContactId);
-      contactRepository.save(contact);
+		} else if (emailRecords.isEmpty()) {
+			for (Contact phoneRecord : phoneRecords) {
+				if (phoneRecord.getLinkPrecedence() == LinkPrecedence.PRIMARY) {
+					primaryContactId = phoneRecord.getId();
+				}
 
-      
-    } else if(phoneRecords.isEmpty()) {
-      for(Contact emailRecord: emailRecords) {
-        if(emailRecord.getLinkPrecedence()==LinkPrecedence.PRIMARY) {
-          primaryContactId = emailRecord.getId();
-        }
-        
-        if(emailRecord.getLinkedId()!=null) {
-          primaryContactId = emailRecord.getLinkedId();
-        }
-      }
+				if (phoneRecord.getLinkedId() != null) {
+					primaryContactId = phoneRecord.getLinkedId();
+				}
+			}
 
-      Contact contact = new Contact(phoneNumber, email);
-      contact.setLinkPrecedence(LinkPrecedence.SECONDARY);
-      contact.setLinkedId(primaryContactId);
-      contactRepository.save(contact);
+			Contact contact = new Contact(phoneNumber, email);
+			contact.setLinkPrecedence(LinkPrecedence.SECONDARY);
+			contact.setLinkedId(primaryContactId);
+			contact = contactRepository.save(contact);
 
-    } else {
-      int primaryEmailContactId=-1;
-      int primaryPhoneContactId=-1;
+		} else if (phoneRecords.isEmpty()) {
+			for (Contact emailRecord : emailRecords) {
+				if (emailRecord.getLinkPrecedence() == LinkPrecedence.PRIMARY) {
+					primaryContactId = emailRecord.getId();
+				}
 
-      for(Contact phoneRecord: phoneRecords) {
-        if(phoneRecord.getLinkPrecedence()==LinkPrecedence.PRIMARY) {
-          primaryPhoneContactId = phoneRecord.getId();
-        }
-        
-        if(phoneRecord.getLinkedId()!=null) {
-          primaryPhoneContactId = phoneRecord.getLinkedId();
-        }
-      }
+				if (emailRecord.getLinkedId() != null) {
+					primaryContactId = emailRecord.getLinkedId();
+				}
+			}
 
-      for(Contact emailRecord: emailRecords) {
-          if(emailRecord.getLinkPrecedence()==LinkPrecedence.PRIMARY) {
-            primaryEmailContactId = emailRecord.getId();
-          }
-          
-          if(emailRecord.getLinkedId()!=null) {
-            primaryEmailContactId = emailRecord.getLinkedId();
-          }
-      }
+			Contact contact = new Contact(phoneNumber, email);
+			contact.setLinkPrecedence(LinkPrecedence.SECONDARY);
+			contact.setLinkedId(primaryContactId);
+			contact = contactRepository.save(contact);
 
-      if(primaryEmailContactId!=primaryPhoneContactId) {
-        Contact primaryEmailContact = contactRepository.findById(primaryEmailContactId).get();
-        Contact primaryPhoneContact = contactRepository.findById(primaryPhoneContactId).get();
+		} else {
+			int primaryEmailContactId = -1;
+			int primaryPhoneContactId = -1;
 
-        Contact oldestContact = (primaryEmailContact.getCreatedAt().before(primaryPhoneContact.getCreatedAt()))?primaryEmailContact:primaryPhoneContact;
-        Contact secondaryContact = (primaryEmailContact.equals(oldestContact))?primaryPhoneContact:primaryEmailContact;
-        primaryContactId = oldestContact.getId();
+			for (Contact phoneRecord : phoneRecords) {
+				if (phoneRecord.getLinkPrecedence() == LinkPrecedence.PRIMARY) {
+					primaryPhoneContactId = phoneRecord.getId();
+				}
 
-        secondaryContact.setLinkPrecedence(LinkPrecedence.SECONDARY);
-        secondaryContact.setLinkedId(primaryContactId);
-        secondaryContact.setUpdatedAt(new Date());
+				if (phoneRecord.getLinkedId() != null) {
+					primaryPhoneContactId = phoneRecord.getLinkedId();
+				}
+			}
 
-        contactRepository.save(secondaryContact);
-      } else {
-        primaryContactId = primaryEmailContactId;
-      }
-    }
+			for (Contact emailRecord : emailRecords) {
+				if (emailRecord.getLinkPrecedence() == LinkPrecedence.PRIMARY) {
+					primaryEmailContactId = emailRecord.getId();
+				}
 
-    List<String> linkedPhoneNumbers = new ArrayList<>();
-    List<String> linkedEmails = new ArrayList<>();
-    List<Integer> secondaryIds = new ArrayList<>();
+				if (emailRecord.getLinkedId() != null) {
+					primaryEmailContactId = emailRecord.getLinkedId();
+				}
+			}
 
-    Contact primaryContact = contactRepository.findById(primaryContactId).get();
-    linkedPhoneNumbers.add(primaryContact.getPhoneNumber());
-    linkedEmails.add(primaryContact.getEmail());
+			if (primaryEmailContactId != primaryPhoneContactId) {
+				Contact primaryEmailContact = contactRepository.findById(primaryEmailContactId).get();
+				Contact primaryPhoneContact = contactRepository.findById(primaryPhoneContactId).get();
 
-    List<Contact> linkedContacts = contactRepository.findAllByLinkedId(primaryContactId);
+				Contact oldestContact = (primaryEmailContact.getCreatedAt().before(primaryPhoneContact.getCreatedAt()))
+						? primaryEmailContact
+						: primaryPhoneContact;
+				Contact secondaryContact = (primaryEmailContact.equals(oldestContact)) ? primaryPhoneContact
+						: primaryEmailContact;
+				primaryContactId = oldestContact.getId();
 
-    linkedPhoneNumbers.addAll(linkedContacts.stream().map(Contact::getPhoneNumber).toList());
-    linkedEmails.addAll(linkedContacts.stream().map(Contact::getEmail).toList());
-    secondaryIds.addAll(linkedContacts.stream().map(Contact::getId).toList());
-    
-    try {
-      ObjectMapper mapper = new ObjectMapper();
-      Map<String, Object> jsonMap = new HashMap<String, Object>();
-        jsonMap.put("primaryContactId", primaryContactId);
-        jsonMap.put("emails", linkedEmails);
-        jsonMap.put("phoneNumbers", linkedPhoneNumbers);
-        jsonMap.put("secondaryContactIds", secondaryIds);
-      String json = mapper.writeValueAsString(
-        jsonMap
-      );
-      return json;
-    } catch (Exception e) {
-      return "Error converting contacts to JSON";
-    }
-  }
+				secondaryContact.setLinkPrecedence(LinkPrecedence.SECONDARY);
+				secondaryContact.setLinkedId(primaryContactId);
+				secondaryContact.setUpdatedAt(new Date());
+
+				secondaryContact = contactRepository.save(secondaryContact);
+			} else {
+				primaryContactId = primaryEmailContactId;
+			}
+		}
+
+		List<String> linkedPhoneNumbers = new ArrayList<>();
+		List<String> linkedEmails = new ArrayList<>();
+		List<Integer> secondaryIds = new ArrayList<>();
+
+		Contact primaryContact = contactRepository.findById(primaryContactId).get();
+		linkedPhoneNumbers.add(primaryContact.getPhoneNumber());
+		linkedEmails.add(primaryContact.getEmail());
+
+		List<Contact> linkedContacts = contactRepository.findAllByLinkedId(primaryContactId);
+
+		linkedPhoneNumbers.addAll(linkedContacts.stream().map(Contact::getPhoneNumber).toList());
+		linkedEmails.addAll(linkedContacts.stream().map(Contact::getEmail).toList());
+		secondaryIds.addAll(linkedContacts.stream().map(Contact::getId).toList());
+
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			Map<String, Object> jsonMap = new HashMap<String, Object>();
+			jsonMap.put("primaryContactId", primaryContactId);
+			jsonMap.put("emails", linkedEmails);
+			jsonMap.put("phoneNumbers", linkedPhoneNumbers);
+			jsonMap.put("secondaryContactIds", secondaryIds);
+			String json = mapper.writeValueAsString(
+					jsonMap);
+			return json;
+		} catch (Exception e) {
+			return "Error converting contacts to JSON";
+		}
+	}
 }
