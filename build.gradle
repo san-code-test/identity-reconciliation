@@ -29,6 +29,7 @@ dependencies {
 	testImplementation 'org.testcontainers:junit-jupiter'
 	testImplementation 'org.testcontainers:postgresql'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	 developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	
 	// compileOnly("org.projectlombok:lombok:1.18.40")
 	// annotationProcessor("org.projectlombok:lombok:1.18.40")

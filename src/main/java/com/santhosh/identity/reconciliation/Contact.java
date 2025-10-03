@@ -1,12 +1,8 @@
 package com.santhosh.identity.reconciliation;
 
-
-
 import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;
-
-
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
